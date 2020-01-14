@@ -81,6 +81,16 @@ var getPossibleWords = function (lines, inputString, knownPattern) {
     })
         .join("\n");
 };
+var LabeledInput = function (props) {
+    return React.createElement(React.Fragment, {}, React.createElement("label", {
+        for: props.id
+    }, props.id), React.createElement("input", {
+        onChange: props.onChange,
+        name: props.id,
+        id: props.id,
+        value: props.value
+    }));
+};
 var App = /** @class */ (function (_super) {
     __extends(App, _super);
     function App(props) {
@@ -90,17 +100,17 @@ var App = /** @class */ (function (_super) {
     }
     App.prototype.render = function () {
         var _this = this;
-        return React.createElement("div", { onChange: function () { return _this.setState({ liked: true }); } }, React.createElement("input", {
+        return React.createElement("div", {}, React.createElement(LabeledInput, {
             onChange: function (e) {
                 return _this.setState({ inputString: e.currentTarget.value });
             },
-            label: "inputString",
+            id: "inputString",
             value: this.state.inputString
-        }), React.createElement("input", {
+        }), React.createElement(LabeledInput, {
             onChange: function (e) {
                 return _this.setState({ knownPattern: e.currentTarget.value });
             },
-            label: "knownPattern",
+            id: "knownPattern",
             value: this.state.knownPattern
         }), React.createElement("pre", {}, getPossibleWords(this.props.lines, this.state.inputString, this.state.knownPattern)));
     };
