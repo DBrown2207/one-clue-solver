@@ -1,140 +1,113 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
+
+const fetchLines = async setLines => {
+  const fileStream = await fetch("./words_alpha.txt");
+  if (!fileStream.ok || fileStream.status !== 200) {
+    console.error("file not found");
+  }
+  const words = await fileStream.text();
+  setLines(words.split(/\n|\r/));
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+const useLines = () => {
+  const [lines, setLines] = React.useState([]);
+  React.useEffect(() => {
+    fetchLines(setLines);
+  }, []);
+  return lines;
 };
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+const useInputEventHandler = (valueMapper, initialValue = "") => {
+  const [value, setValue] = React.useState(initialValue);
+  const [mappedOut, setMappedOut] = React.useState();
+  const handler = React.useCallback(event => {
+    setValue(event.target.value);
+    try {
+      setMappedOut(valueMapper(event.target.value));
+    } catch (e) {
+      setMappedOut(undefined);
     }
+  }, []);
+  return [mappedOut, handler, value];
 };
-var getPossibleWords = function (lines, inputString, knownPattern) {
-    var input = inputString
-        .split("")
-        .reduce(function (prev, curr) {
-        var _a;
-        var count = prev[curr] ? prev[curr].count : 0;
-        return __assign(__assign({}, prev), (_a = {}, _a[curr] = { count: count + 1, regex: new RegExp("" + curr, "gi") }, _a));
-    }, {});
-    var inputValsRegex = new RegExp("^[" + Object.keys(input).join() + "]*$", "i");
-    var knownPatternRegex = new RegExp("^" + knownPattern + "$", "i");
-    return lines
-        .filter(function (line) {
-        return inputValsRegex.test(line) && knownPatternRegex.test(line);
-    })
-        .filter(function (line) {
-        return !Object.keys(input).some(function (char) {
-            var matched = line.match(input[char].regex);
-            return matched && matched.length > input[char].count;
-        });
-    })
-        .join("\n");
-};
-var LabeledInput = function (props) {
-    return React.createElement(React.Fragment, {}, React.createElement("label", {
-        for: props.id
-    }, props.id), React.createElement("input", {
-        onChange: props.onChange,
-        name: props.id,
-        id: props.id,
-        value: props.value
-    }));
-};
-var App = /** @class */ (function (_super) {
-    __extends(App, _super);
-    function App(props) {
-        var _this = _super.call(this, props) || this;
-        _this.state = { inputString: "", knownPattern: "" };
-        return _this;
-    }
-    App.prototype.render = function () {
-        var _this = this;
-        return React.createElement("div", {}, React.createElement(LabeledInput, {
-            onChange: function (e) {
-                return _this.setState({ inputString: e.currentTarget.value });
-            },
-            id: "inputString",
-            value: this.state.inputString
-        }), React.createElement(LabeledInput, {
-            onChange: function (e) {
-                return _this.setState({ knownPattern: e.currentTarget.value });
-            },
-            id: "knownPattern",
-            value: this.state.knownPattern
-        }), React.createElement("pre", {}, getPossibleWords(this.props.lines, this.state.inputString, this.state.knownPattern)));
+const getPossibleWords = (lines, inputString, knownPatternRegex) => {
+  if (!inputString || !knownPatternRegex) {
+    return [];
+  }
+  const input = inputString.split("").reduce((prev, curr) => {
+    const count = prev[curr] ? prev[curr].count : 0;
+    return {
+      ...prev,
+      [curr]: { count: count + 1, regex: new RegExp(`${curr}`, "gi") }
     };
-    return App;
-}(React.Component));
-var main = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var fileStream, words, lines;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, fetch("./words_alpha.txt")];
-            case 1:
-                fileStream = _a.sent();
-                if (!fileStream.ok || fileStream.status !== 200) {
-                    console.error("file not found");
-                }
-                return [4 /*yield*/, fileStream.text()];
-            case 2:
-                words = _a.sent();
-                lines = words.split(/\n|\r/);
-                ReactDOM.render(React.createElement(App, {
-                    lines: lines
-                }), document.getElementById("app"));
-                return [2 /*return*/];
-        }
-    });
-}); };
-main();
+  }, {});
+  const inputValsRegex = new RegExp(`^[${Object.keys(input).join()}]*$`, "i");
+  return lines
+    .filter(line => inputValsRegex.test(line) && knownPatternRegex.test(line))
+    .filter(
+      line =>
+        !Object.keys(input).some(char => {
+          const matched = line.match(input[char].regex);
+          return matched && matched.length > input[char].count;
+        })
+    )
+    .join(`\n`);
+};
+const LabeledInput = ({ id, onChange, value, error }) => {
+  return React.createElement(
+    React.Fragment,
+    null,
+    React.createElement(
+      "label",
+      { htmlFor: id },
+      id,
+      " ",
+      error &&
+        React.createElement("span", { className: "error" }, "invalid input")
+    ),
+    React.createElement("input", {
+      id: id,
+      name: name,
+      onChange: onChange,
+      value: value
+    })
+  );
+};
+const App = () => {
+  const lines = useLines();
+  const [inputString, setInputString, inputStringValue] = useInputEventHandler(
+    val => {
+      if (!/^[a-z]+$/i.test(val)) throw new Error("invalid inputString input");
+      return val;
+    }
+  );
+  const [
+    knownPattern,
+    setKnownPattern,
+    knownPatternString
+  ] = useInputEventHandler(val => {
+    if (val.length === 0) throw new Error("no knownPattern input");
+    return new RegExp(`^${val}$`, "i");
+  });
+  return React.createElement(
+    React.Fragment,
+    null,
+    React.createElement(LabeledInput, {
+      id: "inputString",
+      value: inputStringValue,
+      onChange: setInputString,
+      error: !inputString
+    }),
+    React.createElement(LabeledInput, {
+      id: "knownPattern",
+      value: knownPatternString,
+      onChange: setKnownPattern,
+      error: !knownPattern
+    }),
+    React.createElement(
+      "pre",
+      null,
+      getPossibleWords(lines, inputString, knownPattern)
+    )
+  );
+};
+
+ReactDOM.render(React.createElement(App, null), document.getElementById("app"));
