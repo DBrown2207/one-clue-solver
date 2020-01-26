@@ -18,32 +18,47 @@ const useLines = () => {
 const useInputEventHandler = (valueMapper, initialValue = "") => {
   const [value, setValue] = React.useState(initialValue);
   const [mappedOut, setMappedOut] = React.useState();
-  const handler = React.useCallback(event => {
-    setValue(event.target.value);
+  const handleValue = val => {
+    setValue(val);
     try {
-      setMappedOut(valueMapper(event.target.value));
+      setMappedOut(valueMapper(val));
     } catch (e) {
       setMappedOut(undefined);
     }
-  }, []);
+  };
+  React.useEffect(() => {
+    handleValue(initialValue);
+  }, [initialValue]);
+  const handler = React.useCallback(
+    event => handleValue(event.target.value),
+    []
+  );
   return [mappedOut, handler, value];
 };
 const getPossibleWords = (lines, inputString, knownPatternRegex) => {
-  if (!inputString || !knownPatternRegex) {
+  if (inputString === undefined || !knownPatternRegex) {
     return [];
   }
-  const input = inputString.split("").reduce((prev, curr) => {
-    const count = prev[curr] ? prev[curr].count : 0;
-    return {
-      ...prev,
-      [curr]: { count: count + 1, regex: new RegExp(`${curr}`, "gi") }
-    };
-  }, {});
-  const inputValsRegex = new RegExp(`^[${Object.keys(input).join()}]*$`, "i");
+  let input, inputValsRegex;
+  if (inputString !== null) {
+    input = inputString.split("").reduce((prev, curr) => {
+      const count = prev[curr] ? prev[curr].count : 0;
+      return {
+        ...prev,
+        [curr]: { count: count + 1, regex: new RegExp(`${curr}`, "gi") }
+      };
+    }, {});
+    inputValsRegex = new RegExp(`^[${Object.keys(input).join()}]*$`, "i");
+  }
   return lines
-    .filter(line => inputValsRegex.test(line) && knownPatternRegex.test(line))
     .filter(
       line =>
+        knownPatternRegex.test(line) &&
+        (!inputValsRegex || inputValsRegex.test(line))
+    )
+    .filter(
+      line =>
+        !input ||
         !Object.keys(input).some(char => {
           const matched = line.match(input[char].regex);
           return matched && matched.length > input[char].count;
@@ -75,6 +90,9 @@ const App = () => {
   const lines = useLines();
   const [inputString, setInputString, inputStringValue] = useInputEventHandler(
     val => {
+      if (val === undefined || val === "") {
+        return null;
+      }
       if (!/^[a-z]+$/i.test(val)) throw new Error("invalid inputString input");
       return val;
     }
@@ -94,7 +112,7 @@ const App = () => {
       id: "inputString",
       value: inputStringValue,
       onChange: setInputString,
-      error: !inputString
+      error: inputString === undefined
     }),
     React.createElement(LabeledInput, {
       id: "knownPattern",
@@ -109,5 +127,4 @@ const App = () => {
     )
   );
 };
-
 ReactDOM.render(React.createElement(App, null), document.getElementById("app"));
