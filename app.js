@@ -79,13 +79,12 @@ const getPossibleWords = (lines, inputString, knownPatternRegex, length) => {
       });
       return counter;
     }, {}))
-    .map(charCounter => Object.fromEntries(
-      Object.entries(charCounter)
+    .map((charCounter, i) => `${i+1}: ${JSON.stringify(Object.entries(charCounter)
         .sort((a,b) => a[1] > b[1])
         .map(pair => [pair[0], (pair[1] * 100 / totalMatch).toFixed(2)])
-    ));
+    )}`);
 
-  return `${JSON.stringify(prediction, null, 2)}\n\n${res.join(`\n`)}`;
+  return `${prediction.join(`\n`)}\n\n${res.join(`\n`)}`;
 };
 const LabeledInput = ({ id, onChange, value, error }) => {
   return React.createElement(
@@ -150,7 +149,7 @@ const App = () => {
       id: "wordLength",
       value: lengthString,
       onChange: setLength,
-      error: isNaN(length)
+      error: length !== undefined && isNaN(length)
     }),
     React.createElement(
       "pre",
