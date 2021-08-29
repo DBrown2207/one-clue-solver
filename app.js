@@ -75,7 +75,7 @@ const getPossibleWords = (lines, inputString, knownPatternRegex, length) => {
       word.split("").forEach((char, i) => {
         if(!counter[i]) { counter[i] = {} };
         if(!counter[i][char]) { counter[i][char] = 0 };
-        counter[i][char] += 0
+        counter[i][char] += 1
       });
       return counter;
     }, {}))
