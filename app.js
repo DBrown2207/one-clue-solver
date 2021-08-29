@@ -79,10 +79,11 @@ const getPossibleWords = (lines, inputString, knownPatternRegex, length) => {
       });
       return counter;
     }, {}))
-    .map((charCounter, i) => `${i+1}: ${JSON.stringify(Object.entries(charCounter)
-        .sort((a,b) => a[1] > b[1])
-        .map(pair => [pair[0], (pair[1] * 100 / totalMatch).toFixed(2)])
-    )}`);
+    .map((charCounter, i) => `${i+1}: ${Object.entries(charCounter)
+        .sort((a,b) => b[1] - a[1])
+        .map(pair => `(${pair[0]}: ${(pair[1] * 100 / totalMatch).toFixed(2)}%)`)
+        .join("; ")
+    }`);
 
   return `${prediction.join(`\n`)}\n\n${res.join(`\n`)}`;
 };
