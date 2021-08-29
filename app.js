@@ -35,7 +35,7 @@ const useInputEventHandler = (valueMapper, initialValue = "") => {
   );
   return [mappedOut, handler, value];
 };
-const getPossibleWords = (lines, inputString, knownPatternRegex) => {
+const getPossibleWords = (lines, inputString, knownPatternRegex, length) => {
   if (inputString === undefined || !knownPatternRegex) {
     return [];
   }
@@ -50,7 +50,11 @@ const getPossibleWords = (lines, inputString, knownPatternRegex) => {
     }, {});
     inputValsRegex = new RegExp(`^[${Object.keys(input).join()}]*$`, "i");
   }
-  return lines
+  const res = lines
+    .filter(
+      line =>
+        !length || isNaN(length) || length === line.length
+    )
     .filter(
       line =>
         knownPatternRegex.test(line) &&
@@ -63,8 +67,25 @@ const getPossibleWords = (lines, inputString, knownPatternRegex) => {
           const matched = line.match(input[char].regex);
           return matched && matched.length > input[char].count;
         })
-    )
-    .join(`\n`);
+    );
+
+  const totalMatch = res.length;
+
+  const prediction = Object.values(res.reduce((counter, word) => {
+      word.split("").forEach((char, i) => {
+        if(!counter[i]) { counter[i] = {} };
+        if(!counter[i][char]) { counter[i][char] = 0 };
+        counter[i][char] += 0
+      });
+      return counter;
+    }, {}))
+    .map(charCounter => Object.fromEntries(
+      Object.entries()
+        .sort((a,b) => a[1] > b[1])
+        .map(pair => [pair[0], (pair[1] * 100 / totalMatch).toFixed(2)]
+    ));
+
+  return `${JSON.stringify(prediction, null, 2)}\n\n${res.join(`\n`)}`;
 };
 const LabeledInput = ({ id, onChange, value, error }) => {
   return React.createElement(
@@ -105,6 +126,11 @@ const App = () => {
     if (val.length === 0) throw new Error("no knownPattern input");
     return new RegExp(`^${val}$`, "i");
   });
+  const [
+    length,
+    setLength,
+    lengthString
+  ] = useInputEventHandler(parseInt);
   return React.createElement(
     React.Fragment,
     null,
@@ -120,10 +146,16 @@ const App = () => {
       onChange: setKnownPattern,
       error: !knownPattern
     }),
+    React.createElement(LabeledInput, {
+      id: "wordLength",
+      value: lengthString,
+      onChange: setLength,
+      error: isNaN(length)
+    }),
     React.createElement(
       "pre",
       null,
-      getPossibleWords(lines, inputString, knownPattern)
+      getPossibleWords(lines, inputString, knownPattern, length)
     )
   );
 };
