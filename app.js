@@ -80,7 +80,7 @@ const getPossibleWords = (lines, inputString, knownPatternRegex, length) => {
       return counter;
     }, {}))
     .map(charCounter => Object.fromEntries(
-      Object.entries()
+      Object.entries(charCounter)
         .sort((a,b) => a[1] > b[1])
         .map(pair => [pair[0], (pair[1] * 100 / totalMatch).toFixed(2)])
     ));
