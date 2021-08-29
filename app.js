@@ -82,7 +82,7 @@ const getPossibleWords = (lines, inputString, knownPatternRegex, length) => {
     .map(charCounter => Object.fromEntries(
       Object.entries()
         .sort((a,b) => a[1] > b[1])
-        .map(pair => [pair[0], (pair[1] * 100 / totalMatch).toFixed(2)]
+        .map(pair => [pair[0], (pair[1] * 100 / totalMatch).toFixed(2)])
     ));
 
   return `${JSON.stringify(prediction, null, 2)}\n\n${res.join(`\n`)}`;
